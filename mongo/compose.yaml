@@ -1,0 +1,41 @@
+services:
+
+  # MongoDB service
+  db:
+    image: mongo # Pull the last version
+    restart: always # Restart policy (no|always|unless-stopped|on-failure[:max-retries])
+    env_file: your_mongo.properties # You can use a env file or add the environment variables directly
+    healthcheck: # Consider mongosh was introduced in version 5.0
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    volumes:
+      - your_mongo_data_volume:/data/db
+      - your/mongo/init/file/path:/docker-entrypoint-initdb.d
+    ports:
+      - 27017:27017 # Just for development environment
+    networks:
+      - you_network_if_applies
+
+  # Mongo Express service (optional)
+  me:
+    image: mongo-express
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: your_mongo_express.properties
+    ports:
+      - 8081:8081 # Just for development environment
+    networks:
+      - you_network_if_applies
+
+volumes:
+  your_mongo_data_volume:
+    name: your_mongo_data_volume
+
+networks:
+  you_network_if_applies:
+    name: you_network_if_applies
